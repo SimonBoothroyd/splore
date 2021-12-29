@@ -1,0 +1,18 @@
+<div mat-dialog-content>
+  <form (ngSubmit)="onSubmit()" [formGroup]="filterForm">
+    <mat-form-field appearance="standard">
+      <mat-label>SMARTS</mat-label>
+      <input
+        autocomplete="off"
+        formControlName="smarts"
+        matInput
+        placeholder="SMARTS"
+        required
+      />
+      <mat-error *ngIf="filterForm.get('smarts')?.errors?.invalid">{{
+        getSubstructureErrorMessage()
+      }}</mat-error>
+    </mat-form-field>
+    <button mat-button type="submit">Filter</button>
+  </form>
+</div>

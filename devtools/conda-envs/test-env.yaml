@@ -16,7 +16,7 @@ dependencies:
   - uvicorn
 
     # Building the GUI
-  - nodejs
+  - nodejs =14
 
     # Testing
   - pytest

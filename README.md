@@ -47,7 +47,7 @@ Next to build the GUI itself using NodeJS, run:
 ```shell
 cd frontend
 npm install
-ng build -c production --output-path ../splore/_static --resources-output-path --deploy-url static/
+npm run build -- -c production --output-path ../splore/_static --resources-output-path --deploy-url static/
 cd ..
 ```
 

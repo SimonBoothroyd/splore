@@ -1,28 +1,30 @@
 <div *ngIf="isLoading$ | async" class="loading-overlay">
   <mat-spinner></mat-spinner>
 </div>
-<mat-toolbar>
-  <button
-    #tooltip="matTooltip"
-    [matMenuTriggerFor]="sortByMenu"
-    aria-label="Sort by"
-    mat-icon-button
-    matTooltip="Sort by"
-    matTooltipPosition="below"
-  >
-    <mat-icon>sort</mat-icon>
-  </button>
-  <button
-    #tooltip="matTooltip"
-    (click)="onFilterClicked()"
-    aria-label="Filter"
-    mat-icon-button
-    matTooltip="Filter"
-    matTooltipPosition="below"
-  >
-    <mat-icon>search</mat-icon>
-  </button>
-</mat-toolbar>
+<div class="app-header">
+  <mat-toolbar>
+    <button
+      #tooltip="matTooltip"
+      [matMenuTriggerFor]="sortByMenu"
+      aria-label="Sort by"
+      mat-icon-button
+      matTooltip="Sort by"
+      matTooltipPosition="below"
+    >
+      <mat-icon>sort</mat-icon>
+    </button>
+    <button
+      #tooltip="matTooltip"
+      (click)="onFilterClicked()"
+      aria-label="Filter"
+      mat-icon-button
+      matTooltip="Filter"
+      matTooltipPosition="below"
+    >
+      <mat-icon>search</mat-icon>
+    </button>
+  </mat-toolbar>
+</div>
 <div *ngIf="response" class="app-img-grid">
   <img
     *ngFor="let molecule of response.contents"

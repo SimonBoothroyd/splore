@@ -30,9 +30,6 @@ Options:
 
 ```
 
-In this example we will be generating a small set of imines which have been functionalised with different aryl and
-alkyl substituents.
-
 ### Installation
 
 The required dependencies for this framework can be installed using `conda`:
@@ -42,7 +39,7 @@ conda env create --name splore --file devtools/conda-envs/test-env.yaml
 python setup.py develop
 ```
 
-Next to build the GUI itself using NodeJS, run:
+after which the GUI can be built by running:
 
 ```shell
 cd frontend

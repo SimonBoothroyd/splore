@@ -21,10 +21,10 @@ import { BASE_API_URL } from "./app.module";
 })
 export class AppComponent implements OnInit, OnDestroy {
   public readonly BASE_API_URL: string = BASE_API_URL;
-  response?: GETMoleculesResponse;
+  response: GETMoleculesResponse | undefined;
 
   destroy$: Subject<boolean> = new Subject<boolean>();
-  isLoading$: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
+  isLoading$: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(true);
 
   public constructor(
     private apiService: ApiService,
@@ -69,7 +69,9 @@ export class AppComponent implements OnInit, OnDestroy {
     this.destroy$.unsubscribe();
   }
 
-  public onPageChanged(endpoint: string) {
+  public onPageChanged(endpoint: string | undefined) {
+    if (!endpoint) return;
+
     this.router
       .navigateByUrl(endpoint.replace("/molecules", "/"))
       .catch(console.error);

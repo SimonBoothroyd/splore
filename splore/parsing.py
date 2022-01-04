@@ -37,7 +37,7 @@ def parse_page(page: Optional[str]) -> Page:
     if page is None:
         return None, "next"
 
-    direction, encoded_cursor = re.match(r"(.+)\((.+)\)", page).groups()
+    direction, encoded_cursor = re.match(r"^(.+)\((.+)\)$", page).groups()
     cursor = parse_cursor(encoded_cursor)
 
     return cursor, direction
@@ -48,7 +48,7 @@ def parse_sort_by(sort_by: Optional[str]) -> Optional[SortBy]:
     if sort_by is None:
         return None
 
-    direction, column = re.match(r"(.+)\((.+)\)", sort_by).groups()
+    direction, column = re.match(r"^(.+)\((.+)\)$", sort_by).groups()
     return column, direction
 
 

@@ -23,25 +23,23 @@
     <mat-icon>search</mat-icon>
   </button>
 </mat-toolbar>
-<ng-container *ngIf="response">
-  <div class="app-img-grid">
-    <img
-      *ngFor="let molecule of response.contents"
-      [alt]="molecule.smiles"
-      [src]="BASE_API_URL + molecule._links.img"
-    />
-  </div>
-  <app-paginator
-    (first)="onPageChanged(response._links.first)"
-    (last)="onPageChanged(response._links.last)"
-    (next)="onPageChanged(response._links.next)"
-    (prev)="onPageChanged(response._links.prev)"
-    [enableFirst]="response._links.first != undefined"
-    [enableLast]="response._links.last != undefined"
-    [enableNext]="response._links.next != undefined"
-    [enablePrev]="response._links.prev != undefined"
-  ></app-paginator>
-</ng-container>
+<div *ngIf="response" class="app-img-grid">
+  <img
+    *ngFor="let molecule of response.contents"
+    [alt]="molecule.smiles"
+    [src]="BASE_API_URL + molecule._links.img"
+  />
+</div>
+<app-paginator
+  (first)="onPageChanged(response?._links?.first)"
+  (last)="onPageChanged(response?._links?.last)"
+  (next)="onPageChanged(response?._links?.next)"
+  (prev)="onPageChanged(response?._links?.prev)"
+  [enableFirst]="response?._links?.first != undefined"
+  [enableLast]="response?._links?.last != undefined"
+  [enableNext]="response?._links?.next != undefined"
+  [enablePrev]="response?._links?.prev != undefined"
+></app-paginator>
 <mat-menu #sortByMenu="matMenu">
   <button (click)="onSort(undefined, undefined)" mat-menu-item>
     <span>None</span>

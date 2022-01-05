@@ -7,7 +7,7 @@ import {
   ValidationErrors,
   Validators,
 } from "@angular/forms";
-import { map, Observable } from "rxjs";
+import { catchError, map, Observable, of } from "rxjs";
 import { MatDialogRef } from "@angular/material/dialog";
 
 @Component({
@@ -19,8 +19,16 @@ import { MatDialogRef } from "@angular/material/dialog";
 export class FilterDialogComponent implements OnInit {
   public filterForm: FormGroup = new FormGroup({
     smarts: new FormControl("", {
-      validators: [Validators.required],
+      validators: [],
       asyncValidators: [(control) => this.validateSubstructure(control)],
+      updateOn: "blur",
+    }),
+    nHeavyMin: new FormControl("", {
+      validators: [Validators.pattern(/\d+/)],
+      updateOn: "blur",
+    }),
+    nHeavyMax: new FormControl("", {
+      validators: [Validators.pattern(/\d+/)],
       updateOn: "blur",
     }),
   });
@@ -35,27 +43,31 @@ export class FilterDialogComponent implements OnInit {
   validateSubstructure(
     control: AbstractControl
   ): Observable<ValidationErrors | null> {
-    console.log(this, control);
-
     return this.apiService.isSubstructureValid(control.value).pipe(
       map((isValid) => {
         return isValid ? null : { invalid: true };
+      }),
+      catchError((err) => {
+        return of({ internal: true });
       })
     );
   }
 
   getSubstructureErrorMessage() {
-    if (this.filterForm.get("smarts")?.hasError("required"))
-      return "enter a value";
+    if (this.filterForm.get("smarts")?.hasError("internal"))
+      return "internal error";
+
     return this.filterForm.get("smarts")?.hasError("invalid")
       ? "invalid SMARTS"
-      : "";
+      : "internal error";
+  }
+
+  getIntegerErrorMessage(control: AbstractControl | null) {
+    return control?.hasError("pattern") ? "must be an integer" : "";
   }
 
   onSubmit() {
     if (this.filterForm.invalid) return;
-
-    console.log(this.filterForm.value);
     this.dialogRef.close(this.filterForm.value);
   }
 }

@@ -23,18 +23,18 @@ class RangeFilter(BaseModel):
         ..., description="The column to filter."
     )
 
-    lt: Optional[Union[StrictInt, float]] = Field(
-        ..., description="The column must be < this value."
-    )
     le: Optional[Union[StrictInt, float]] = Field(
         ..., description="The column must be <= this value."
     )
-
-    gt: Optional[Union[StrictInt, float]] = Field(
-        ..., description="The column must be > this value."
+    lt: Optional[Union[StrictInt, float]] = Field(
+        ..., description="The column must be < this value."
     )
+
     ge: Optional[Union[StrictInt, float]] = Field(
         ..., description="The column must be >= this value."
+    )
+    gt: Optional[Union[StrictInt, float]] = Field(
+        ..., description="The column must be > this value."
     )
 
     @validator("lt", always=True)

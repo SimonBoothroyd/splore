@@ -27,9 +27,11 @@ from splore.parsing import (
     encode_base64,
     encode_cursor,
     encode_page,
+    encode_range_filter,
     encode_sort_by,
     parse_base64,
     parse_page,
+    parse_range_filter,
     parse_sort_by,
 )
 
@@ -53,7 +55,7 @@ if not os.path.isdir(static_directory) or not os.path.isfile(
 ):
     raise RuntimeError("`index.html` is missing - make sure `frontend` was built.")
 
-app = FastAPI(title="splore", openapi_url="/openapi.json", docs_url="/docs")
+app = FastAPI(title="splore", openapi_url="/api/openapi.json", docs_url="/api/docs")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -105,10 +107,12 @@ def _build_molecules_url(
 
     for column_filter in filters if filters else []:
 
-        if not isinstance(column_filter, SMARTSFilter):
+        if isinstance(column_filter, SMARTSFilter):
+            query_paths.append(f"substr={encode_base64(column_filter.smarts)}")
+        elif isinstance(column_filter, RangeFilter):
+            query_paths.extend(encode_range_filter(column_filter))
+        else:
             raise NotImplementedError
-
-        query_paths.append(f"substr={encode_base64(column_filter.smarts)}")
 
     return "?".join(
         [base_url] + ([] if len(query_paths) == 0 else ["&".join(query_paths)])
@@ -121,6 +125,9 @@ async def get_molecules(
     per_page: int = Query(settings.SPLORE_API_DEFAULT_PER_PAGE, ge=1),
     sort_by_param: Optional[str] = Query(None, alias="sort_by"),
     smarts_param: Optional[str] = Query(None, alias="substr"),
+    n_heavy: Optional[List[str]] = Query(
+        None, alias="n_heavy", regex=r"^[gl][te]\(\d+\)$"
+    ),
 ):
 
     page = parse_page(page_param)
@@ -132,6 +139,9 @@ async def get_molecules(
 
     if smarts:
         filters.append(SMARTSFilter(smarts=smarts))
+    elif n_heavy:
+        le, lt, gt, ge = parse_range_filter(n_heavy, int)
+        filters.append(RangeFilter(column="n_heavy", le=le, lt=lt, gt=gt, ge=ge))
 
     # define a partial so that the self, first, and last calls to `read_all` are same
     get_page = functools.partial(
@@ -164,13 +174,13 @@ async def get_molecules(
     return GETMoleculesResponse(
         _metadata=PaginationMetadata(
             cursor=None if not self_cursor else encode_cursor(self_cursor[0]),
-            move_to=None if not self_cursor else self_cursor[1],
+            move_to="next" if not self_cursor else self_cursor[1],
             per_page=per_page,
             sort_by=sort_by,
             filters=filters,
         ),
         _links=PaginationLinks(
-            self=get_url(self_cursor),
+            self=get_url(self_cursor if self_cursor else page.current),
             first=get_url(first_cursor) if page.has_prev else None,
             prev=get_url(prev_cursor),
             next=get_url(next_cursor),

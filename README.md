@@ -13,7 +13,12 @@ molecules.
 The GUI can easily be launched from the command line using the `splore` command:
 
 ```shell
+# Load molecules from a local file
 splore --file path-to-molecules.sdf
+
+# Load molecules from a public QCArchive dataset
+splore --qcf-dataset "OpenFF BCC Refit Study COH v1.0" --qcf-datatype basic
+splore --qcf-dataset "OpenFF Rowley Biaryl v1.0" --qcf-datatype td
 ```
 
 A full list of options can be printed using the `--help` flag:

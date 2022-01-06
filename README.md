@@ -28,14 +28,27 @@ splore --help
 Usage: splore [OPTIONS]
 
 Options:
-  --file FILE     The path to the file of molecules (.smi, .sdf, .sdf.gz) to
-                  display.  [required]
-  --port INTEGER  The port to run the GUI on.  [default: 8000; required]
-  --help          Show this message and exit.
-
+  --file FILE                    The path to the file of molecules (.smi,
+                                 .sdf, .sdf.gz) to display.
+  --qcf-dataset TEXT             The name of a QC dataset stored in the public
+                                 QCArchive to extract the molecules to
+                                 visualize from.
+  --qcf-datatype [basic|opt|td]  The type of dataset referenced by the 
+                                 `--qcf-dataset` input.
+  --port INTEGER                 The port to run the GUI on.  [default: 8000;
+                                 required]
+  --help                         Show this message and exit.
 ```
 
 ### Installation
+
+The framework and its required dependencies can be installed using `conda`:
+
+```shell
+conda install -c conda-forge -c simonboothroyd splore
+```
+
+#### From Source
 
 The required dependencies for this framework can be installed using `conda`:
 

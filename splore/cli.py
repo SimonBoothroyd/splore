@@ -62,18 +62,21 @@ def main(ctx, file_path, qc_dataset_name, qc_dataset_type, port):
     console = rich.get_console()
     console.rule("SPLORE")
 
-    if file_path is not None:
-        molecules = molecules_from_file(file_path)
-    elif qc_dataset_name is not None:
-        molecules = molecules_from_qcfractal(qc_dataset_name, qc_dataset_type)
-    else:
-        raise NotImplementedError()
-
     with NamedTemporaryFile(suffix=".sqlite") as db_file:
 
         db = SploreDB(db_file.name)
 
-        with console.status(f"loading [file]{file_path}[/file]"):
+        with console.status(
+            f"loading [file]{file_path if file_path else qc_dataset_name}[/file]"
+        ):
+
+            if file_path is not None:
+                molecules = molecules_from_file(file_path)
+            elif qc_dataset_name is not None:
+                molecules = molecules_from_qcfractal(qc_dataset_name, qc_dataset_type)
+            else:
+                raise NotImplementedError()
+
             db.create(molecules)
 
         with set_env(

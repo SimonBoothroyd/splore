@@ -99,7 +99,7 @@ def _build_molecules_url(
     if page is None:
         return None
 
-    base_url = "/molecules"
+    base_url = "/api/molecules"
     query_paths = [f"page={encode_page(page)}", f"per_page={per_page}"]
 
     if sort_by is not None:
@@ -110,7 +110,10 @@ def _build_molecules_url(
         if isinstance(column_filter, SMARTSFilter):
             query_paths.append(f"substr={encode_base64(column_filter.smarts)}")
         elif isinstance(column_filter, RangeFilter):
-            query_paths.extend(encode_range_filter(column_filter))
+            query_paths.extend(
+                f"{column_filter.column}={filter_str}"
+                for filter_str in encode_range_filter(column_filter)
+            )
         else:
             raise NotImplementedError
 

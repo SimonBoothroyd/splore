@@ -64,8 +64,6 @@ export class AppComponent implements OnInit, OnDestroy {
               })
             );
 
-          console.log(params.has("n_heavy"), params.getAll("n_heavy"), filters);
-
           return this.apiService.getMolecules(
             params.get("page") || undefined,
             params.get("per_page") || undefined,
@@ -103,7 +101,7 @@ export class AppComponent implements OnInit, OnDestroy {
     if (!endpoint) return;
 
     this.router
-      .navigateByUrl(endpoint.replace("/molecules", "/"))
+      .navigateByUrl(endpoint.replace("/api/molecules", "/"))
       .catch(console.error);
   }
 
@@ -150,8 +148,6 @@ export class AppComponent implements OnInit, OnDestroy {
         ge:
           result.nHeavyMin.length > 0 ? parseInt(result.nHeavyMin) : undefined,
       });
-
-    console.log(filters);
 
     const httpQueryParams = this.apiService.getMoleculesParams(
       undefined,

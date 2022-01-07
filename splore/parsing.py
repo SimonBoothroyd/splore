@@ -8,6 +8,10 @@ from splore.models import Cursor, Page, RangeFilter, SortBy
 
 _T = TypeVar("_T", bound=Union[Type[float], Type[int]])
 
+PAGE_REGEX = r"^(next|prev)\(([^)]+)\)$"
+SORT_REGEX = r"^(desc|asc)\(([^)]+)\)$"
+FILTER_REGEX = r"^(le|lt|gt|ge)\(([^)]+)\)$"
+
 
 def encode_base64(value: str) -> str:
     return base64.urlsafe_b64encode(value.encode()).decode().rstrip("=")
@@ -40,7 +44,7 @@ def parse_page(page: Optional[str]) -> Page:
     if page is None:
         return None, "next"
 
-    direction, encoded_cursor = re.match(r"^(.+)\((.+)\)$", page).groups()
+    direction, encoded_cursor = re.match(PAGE_REGEX, page).groups()
     cursor = parse_cursor(encoded_cursor)
 
     return cursor, direction
@@ -55,7 +59,7 @@ def parse_sort_by(sort_by: Optional[str]) -> Optional[SortBy]:
     if sort_by is None:
         return None
 
-    direction, column = re.match(r"^(.+)\((.+)\)$", sort_by).groups()
+    direction, column = re.match(SORT_REGEX, sort_by).groups()
     return column, direction
 
 
@@ -83,7 +87,7 @@ def parse_range_filter(
 
     for filter_str in filters:
 
-        sign, value_str = re.match(r"^(.+)\((.+)\)$", filter_str).groups()
+        sign, value_str = re.match(FILTER_REGEX, filter_str).groups()
         value: _T = value_type(value_str)
 
         value_by_sign[sign.lower()].append(value)

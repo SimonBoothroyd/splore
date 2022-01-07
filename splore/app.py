@@ -24,6 +24,9 @@ from splore.models import (
     SortBy,
 )
 from splore.parsing import (
+    FILTER_REGEX,
+    PAGE_REGEX,
+    SORT_REGEX,
     encode_base64,
     encode_cursor,
     encode_page,
@@ -124,13 +127,11 @@ def _build_molecules_url(
 
 @app.get("/api/molecules")
 async def get_molecules(
-    page_param: Optional[str] = Query(None, alias="page"),
+    page_param: Optional[str] = Query(None, alias="page", regex=PAGE_REGEX),
     per_page: int = Query(settings.SPLORE_API_DEFAULT_PER_PAGE, ge=1),
-    sort_by_param: Optional[str] = Query(None, alias="sort_by"),
+    sort_by_param: Optional[str] = Query(None, alias="sort_by", regex=SORT_REGEX),
     smarts_param: Optional[str] = Query(None, alias="substr"),
-    n_heavy: Optional[List[str]] = Query(
-        None, alias="n_heavy", regex=r"^[gl][te]\(\d+\)$"
-    ),
+    n_heavy: Optional[List[str]] = Query(None, alias="n_heavy", regex=FILTER_REGEX),
 ):
 
     page = parse_page(page_param)
@@ -142,7 +143,7 @@ async def get_molecules(
 
     if smarts:
         filters.append(SMARTSFilter(smarts=smarts))
-    elif n_heavy:
+    if n_heavy:
         le, lt, gt, ge = parse_range_filter(n_heavy, int)
         filters.append(RangeFilter(column="n_heavy", le=le, lt=lt, gt=gt, ge=ge))
 

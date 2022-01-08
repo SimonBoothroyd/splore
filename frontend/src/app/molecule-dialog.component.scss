@@ -1,0 +1,62 @@
+.mat-dialog-content {
+  height: 100%;
+}
+
+.description-row {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 1em;
+
+  @media screen and (min-width: 765px) {
+    align-items: center;
+    flex-direction: row;
+  }
+
+  .description-label {
+    font-weight: bold;
+    flex: 3;
+  }
+
+  .description-content {
+    flex: 8;
+
+    span {
+      word-break: break-all;
+      text-align: left;
+    }
+
+    img {
+      width: 100%;
+      max-width: 300px;
+
+      display: block;
+      margin: auto;
+    }
+  }
+
+  .description-button {
+    flex: 1;
+
+    a {
+      .mat-icon {
+        color: #bdbdbd;
+      }
+
+      &:hover {
+        .mat-icon {
+          cursor: pointer;
+          color: #ff9100;
+        }
+      }
+    }
+  }
+
+  &:not(:first-child) {
+    margin-top: 1em;
+  }
+
+  &:not(:last-child) {
+    margin-bottom: 1em;
+  }
+}

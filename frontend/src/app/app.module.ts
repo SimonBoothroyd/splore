@@ -10,12 +10,19 @@ import { AppRoutingModule } from "./app-routing.module";
 import { AppComponent } from "./app.component";
 import { PaginatorComponent } from "./paginator.component";
 import { FilterDialogComponent } from "./filter-dialog.component";
+import { MoleculeDialogComponent } from "./molecule-dialog.component";
+import { ClipboardModule } from "@angular/cdk/clipboard";
 
 declare var baseAPIUrl: string;
 export const BASE_API_URL = baseAPIUrl;
 
 @NgModule({
-  declarations: [AppComponent, PaginatorComponent, FilterDialogComponent],
+  declarations: [
+    AppComponent,
+    PaginatorComponent,
+    FilterDialogComponent,
+    MoleculeDialogComponent,
+  ],
   imports: [
     MaterialModule,
 
@@ -24,10 +31,12 @@ export const BASE_API_URL = baseAPIUrl;
 
     HttpClientModule,
 
+    ClipboardModule,
+
     FormsModule,
+    ReactiveFormsModule,
 
     AppRoutingModule,
-    ReactiveFormsModule,
   ],
   providers: [],
   bootstrap: [AppComponent],

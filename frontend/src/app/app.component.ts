@@ -6,6 +6,7 @@ import {
   OnInit,
 } from "@angular/core";
 import {
+  GETMoleculeResponse,
   GETMoleculesResponse,
   RangeFilter,
   SMARTSFilter,
@@ -17,6 +18,7 @@ import { MatDialog } from "@angular/material/dialog";
 import { FilterDialogComponent } from "./filter-dialog.component";
 import { BASE_API_URL } from "./app.module";
 import { MatSnackBar } from "@angular/material/snack-bar";
+import { MoleculeDialogComponent } from "./molecule-dialog.component";
 
 @Component({
   selector: "app-root",
@@ -162,5 +164,14 @@ export class AppComponent implements OnInit, OnDestroy {
     });
 
     this.router.navigate(["/"], { queryParams }).catch(console.error);
+  }
+
+  public onMoleculeClicked(molecule: GETMoleculeResponse) {
+    this.dialog.open(MoleculeDialogComponent, {
+      restoreFocus: false,
+      height: "60%",
+      width: "50%",
+      data: { molecule: molecule },
+    });
   }
 }

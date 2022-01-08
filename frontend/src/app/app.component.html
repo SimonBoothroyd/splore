@@ -27,6 +27,7 @@
 </div>
 <div *ngIf="response" class="app-img-grid">
   <img
+    (click)="onMoleculeClicked(molecule)"
     *ngFor="let molecule of response.contents"
     [alt]="molecule.smiles"
     [src]="BASE_API_URL + molecule._links.img"

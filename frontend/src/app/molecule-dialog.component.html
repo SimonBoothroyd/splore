@@ -1,0 +1,36 @@
+<div mat-dialog-content>
+  <div class="description-row">
+    <div class="description-label">SMILES</div>
+    <div class="description-content">
+      <span>{{ data.molecule.smiles }}</span>
+    </div>
+    <div class="description-button">
+      <a
+        #tooltipCopySMILES="matTooltip"
+        (cdkCopyToClipboardCopied)="onCopied(tooltipCopySMILES, $event)"
+        [cdkCopyToClipboard]="data.molecule.smiles"
+        matTooltip="Copied!"
+        matTooltipDisabled="true"
+        matTooltipPosition="below"
+      >
+        <mat-icon>content_copy</mat-icon>
+      </a>
+    </div>
+  </div>
+  <mat-divider></mat-divider>
+  <div class="description-row">
+    <div class="description-label">2D Structure</div>
+    <div class="description-content">
+      <img
+        [alt]="data.molecule.smiles"
+        [src]="BASE_API_URL + data.molecule._links.img"
+      />
+    </div>
+    <div class="description-button"></div>
+  </div>
+  <!--  <mat-divider></mat-divider>-->
+  <!--  <div class="description-row">-->
+  <!--    <div class="description-label">Molecular Weight</div>-->
+  <!--    <div class="description-content">0.000</div>-->
+  <!--  </div>-->
+</div>

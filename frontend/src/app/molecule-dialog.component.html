@@ -28,9 +28,59 @@
     </div>
     <div class="description-button"></div>
   </div>
-  <!--  <mat-divider></mat-divider>-->
-  <!--  <div class="description-row">-->
-  <!--    <div class="description-label">Molecular Weight</div>-->
-  <!--    <div class="description-content">0.000</div>-->
-  <!--  </div>-->
+  <ng-template [ngIf]="descriptors != undefined">
+    <mat-divider></mat-divider>
+    <div class="description-row">
+      <div class="description-label">Molecular Weight</div>
+      <div class="description-content">{{ descriptors.weight }}</div>
+    </div>
+    <div class="description-row">
+      <div class="description-label">No. Heavy Atoms</div>
+      <div class="description-content">{{ descriptors.n_heavy_atoms }}</div>
+    </div>
+    <mat-divider></mat-divider>
+    <div class="description-row">
+      <div class="description-label">Topological Polar Surface Area</div>
+      <div class="description-content">
+        {{ descriptors.topological_polar_surface_area }}
+      </div>
+    </div>
+    <mat-divider></mat-divider>
+    <div class="description-row">
+      <div class="description-label">No. H. Bond Acceptors</div>
+      <div class="description-content">
+        {{ descriptors.n_h_bond_acceptors }}
+      </div>
+    </div>
+    <div class="description-row">
+      <div class="description-label">No. H. Bond Donors</div>
+      <div class="description-content">{{ descriptors.n_h_bond_donors }}</div>
+    </div>
+    <mat-divider></mat-divider>
+    <div class="description-row">
+      <div class="description-label">No. Aliphatic Carbocycles</div>
+      <div class="description-content">
+        {{ descriptors.n_aliphatic_carbocycles }}
+      </div>
+    </div>
+    <div class="description-row">
+      <div class="description-label">No. Aliphatic Heteroocycles</div>
+      <div class="description-content">
+        {{ descriptors.n_aliphatic_heterocycles }}
+      </div>
+    </div>
+    <mat-divider></mat-divider>
+    <div class="description-row">
+      <div class="description-label">No. Aromatic Carbocycles</div>
+      <div class="description-content">
+        {{ descriptors.n_aromatic_carbocycles }}
+      </div>
+    </div>
+    <div class="description-row">
+      <div class="description-label">No. Aromatic Heteroocycles</div>
+      <div class="description-content">
+        {{ descriptors.n_aromatic_heterocycles }}
+      </div>
+    </div>
+  </ng-template>
 </div>

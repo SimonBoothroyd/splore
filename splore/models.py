@@ -1,6 +1,15 @@
 from typing import Dict, Generic, List, Literal, Optional, Tuple, TypeVar, Union
 
-from pydantic import BaseModel, Field, StrictInt, validator
+from pydantic import (
+    BaseModel,
+    Field,
+    NonNegativeFloat,
+    NonNegativeInt,
+    PositiveFloat,
+    PositiveInt,
+    StrictInt,
+    validator,
+)
 from pydantic.generics import GenericModel
 from rdkit import Chem
 
@@ -19,7 +28,7 @@ class RangeFilter(BaseModel):
 
     type: Literal["range"] = "range"
 
-    column: Literal["n_heavy", "weight"] = Field(
+    column: Literal["n_heavy_atoms", "weight"] = Field(
         ..., description="The column to filter."
     )
 
@@ -125,7 +134,56 @@ class PaginatedCollection(GenericModel, Generic[_T]):
     contents: List[_T] = Field(..., description="The contents of the collection.")
 
 
-class GETMoleculeResponse(Link):
+class MoleculeDescriptors(BaseModel):
+
+    weight: PositiveFloat = Field(
+        ..., description="The molecular weight (g / mol) of the molecule."
+    )
+    n_heavy_atoms: PositiveInt = Field(
+        ..., description="The number of heavy atoms in the molecule."
+    )
+
+    n_aliphatic_carbocycles: NonNegativeInt = Field(
+        ...,
+        description="The number of aliphatic rings in the molecule that do not contain "
+        "hetero atoms.",
+    )
+    n_aliphatic_heterocycles: NonNegativeInt = Field(
+        ...,
+        description="The number of aliphatic rings in the molecule that contain hetero "
+        "atoms.",
+    )
+
+    n_aromatic_carbocycles: NonNegativeInt = Field(
+        ...,
+        description="The number of aromatic rings in the molecule that do not contain "
+        "hetero atoms.",
+    )
+    n_aromatic_heterocycles: NonNegativeInt = Field(
+        ...,
+        description="The number of aromatic rings in the molecule that contain hetero "
+        "atoms.",
+    )
+
+    n_rotatable_bonds: NonNegativeInt = Field(
+        ..., description="The number of rotatable rings in the molecule."
+    )
+
+    n_h_bond_acceptors: NonNegativeInt = Field(
+        ..., description="The number of hydrogen bond-acceptors in the molecule."
+    )
+    n_h_bond_donors: NonNegativeInt = Field(
+        ..., description="The number of hydrogen bond-donors in the molecule."
+    )
+
+    topological_polar_surface_area: NonNegativeFloat = Field(
+        ...,
+        description="The topological polar surface area computed using RDKIT and "
+        "including contributions from polar sulphur and phosphorus atoms.",
+    )
+
+
+class GETMoleculeResponseBase(Link):
 
     smiles: str = Field(..., description="The SMILES representation of the molecule.")
 
@@ -134,5 +192,14 @@ class GETMoleculeResponse(Link):
     )
 
 
-class GETMoleculesResponse(PaginatedCollection[GETMoleculeResponse]):
+class GETMoleculeResponse(GETMoleculeResponseBase):
+
+    descriptors: MoleculeDescriptors = Field(
+        ...,
+        description="A set of descriptors about the molecule such as molecular weight "
+        "and number of rotatable bonds.",
+    )
+
+
+class GETMoleculesResponse(PaginatedCollection[GETMoleculeResponseBase]):
     ...

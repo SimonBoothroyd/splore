@@ -15,7 +15,9 @@ from splore.db import SploreDB
 from splore.io import molecule_to_svg
 from splore.models import (
     GETMoleculeResponse,
+    GETMoleculeResponseBase,
     GETMoleculesResponse,
+    MoleculeDescriptors,
     Page,
     PaginationLinks,
     PaginationMetadata,
@@ -46,6 +48,21 @@ class Settings(BaseSettings):
 
     SPLORE_DB_PATH: str = "splore-db.sqlite"
 
+
+_DB_TO_URL = {
+    "smiles": "smiles",
+    "weight": "weight",
+    "n_heavy_atoms": "n_heavy",
+    "n_aliphatic_carbocycles": "n_cyc_ali_c",
+    "n_aliphatic_heterocycles": "n_cyc_ali_h",
+    "n_aromatic_carbocycles": "n_cyc_aro_c",
+    "n_aromatic_heterocycles": "n_cyc_aro_h",
+    "n_rotatable_bonds": "n_rot",
+    "n_h_bond_acceptors": "n_hba",
+    "n_h_bond_donors": "n_hbd",
+    "topological_polar_surface_area": "tpsa",
+}
+_URL_TO_DB = {value: key for key, value in _DB_TO_URL.items()}
 
 settings = Settings()
 
@@ -81,7 +98,7 @@ def get_app_angular():
 
 
 @app.get("/api")
-async def get_root():
+async def get_api_root():
     return {
         "version": splore.__version__,
         "settings": {
@@ -106,7 +123,7 @@ def _build_molecules_url(
     query_paths = [f"page={encode_page(page)}", f"per_page={per_page}"]
 
     if sort_by is not None:
-        query_paths.append(f"sort_by={encode_sort_by(sort_by)}")
+        query_paths.append(f"sort_by={encode_sort_by(sort_by, _DB_TO_URL)}")
 
     for column_filter in filters if filters else []:
 
@@ -114,7 +131,7 @@ def _build_molecules_url(
             query_paths.append(f"substr={encode_base64(column_filter.smarts)}")
         elif isinstance(column_filter, RangeFilter):
             query_paths.extend(
-                f"{column_filter.column}={filter_str}"
+                f"{_DB_TO_URL[column_filter.column]}={filter_str}"
                 for filter_str in encode_range_filter(column_filter)
             )
         else:
@@ -131,11 +148,13 @@ async def get_molecules(
     per_page: int = Query(settings.SPLORE_API_DEFAULT_PER_PAGE, ge=1),
     sort_by_param: Optional[str] = Query(None, alias="sort_by", regex=SORT_REGEX),
     smarts_param: Optional[str] = Query(None, alias="substr"),
-    n_heavy: Optional[List[str]] = Query(None, alias="n_heavy", regex=FILTER_REGEX),
+    n_heavy_atoms: Optional[List[str]] = Query(
+        None, alias=_DB_TO_URL["n_heavy_atoms"], regex=FILTER_REGEX
+    ),
 ):
 
     page = parse_page(page_param)
-    sort_by = parse_sort_by(sort_by_param)
+    sort_by = parse_sort_by(sort_by_param, _URL_TO_DB)
 
     smarts = None if not smarts_param else parse_base64(smarts_param)
 
@@ -143,9 +162,9 @@ async def get_molecules(
 
     if smarts:
         filters.append(SMARTSFilter(smarts=smarts))
-    if n_heavy:
-        le, lt, gt, ge = parse_range_filter(n_heavy, int)
-        filters.append(RangeFilter(column="n_heavy", le=le, lt=lt, gt=gt, ge=ge))
+    if n_heavy_atoms:
+        le, lt, gt, ge = parse_range_filter(n_heavy_atoms, int)
+        filters.append(RangeFilter(column="n_heavy_atoms", le=le, lt=lt, gt=gt, ge=ge))
 
     # define a partial so that the self, first, and last calls to `read_all` are same
     get_page = functools.partial(
@@ -191,7 +210,7 @@ async def get_molecules(
             last=get_url(last_cursor) if page.has_next else None,
         ),
         contents=[
-            GETMoleculeResponse(
+            GETMoleculeResponseBase(
                 self=f"/molecules/{molecule_id}",
                 id=molecule_id,
                 smiles=smiles,
@@ -207,13 +226,20 @@ async def get_molecule(
     molecule_id: int = Path(0, ge=0),
 ):
 
-    smiles, *_ = db.read(molecule_id)
+    db_row = db.read(molecule_id)
 
     return GETMoleculeResponse(
         self=f"/molecules/{molecule_id}",
         id=molecule_id,
-        smiles=smiles,
+        smiles=db_row.smiles,
         _links={"img": f"/molecules/{molecule_id}/img"},
+        descriptors=MoleculeDescriptors(
+            **{
+                key: value
+                for key, value in db_row._asdict().items()
+                if key not in {"smiles"}
+            }
+        ),
     )
 
 

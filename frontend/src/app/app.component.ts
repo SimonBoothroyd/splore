@@ -6,7 +6,7 @@ import {
   OnInit,
 } from "@angular/core";
 import {
-  GETMoleculeResponse,
+  GETMoleculeResponseBase,
   GETMoleculesResponse,
   RangeFilter,
   SMARTSFilter,
@@ -166,10 +166,10 @@ export class AppComponent implements OnInit, OnDestroy {
     this.router.navigate(["/"], { queryParams }).catch(console.error);
   }
 
-  public onMoleculeClicked(molecule: GETMoleculeResponse) {
+  public onMoleculeClicked(molecule: GETMoleculeResponseBase) {
     this.dialog.open(MoleculeDialogComponent, {
       restoreFocus: false,
-      height: "60%",
+      height: "64%",
       width: "50%",
       data: { molecule: molecule },
     });

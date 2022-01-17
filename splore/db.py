@@ -1,10 +1,10 @@
 import functools
 import os
 import sqlite3
-from typing import Any, Iterable, List, Optional, Tuple, Union
+from typing import Any, Iterable, List, NamedTuple, Optional, Tuple, Union
 
 from rdkit import Chem
-from rdkit.Chem import Descriptors
+from rdkit.Chem import rdMolDescriptors
 
 from splore.models import Cursor, Page, RangeFilter, SMARTSFilter, SortBy
 
@@ -40,10 +40,13 @@ def _filters_to_sql(filters: List[Union[RangeFilter, SMARTSFilter]]) -> str:
             if column_filter.ge is not None:
                 statements.append(f"{column_filter.column} >= {column_filter.ge}")
 
-        if isinstance(column_filter, SMARTSFilter):
+        elif isinstance(column_filter, SMARTSFilter):
             statements.append(f"smarts_match(smiles,'{column_filter.smarts}')")
 
-    return f"where {' and '.join(statements)}" if len(statements) > 0 else ""
+        else:
+            raise NotImplementedError()
+
+    return " and ".join(statements)
 
 
 @functools.lru_cache(16384)
@@ -53,6 +56,27 @@ def _filter_by_pattern(smiles: str, pattern: str) -> bool:
     q_mol: Chem.Mol = Chem.MolFromSmarts(pattern)
 
     return molecule.HasSubstructMatch(q_mol)
+
+
+class SploreDBRow(NamedTuple):
+
+    smiles: str
+
+    weight: float
+    n_heavy_atoms: int
+
+    n_aliphatic_carbocycles: int
+    n_aliphatic_heterocycles: int
+
+    n_aromatic_carbocycles: int
+    n_aromatic_heterocycles: int
+
+    n_rotatable_bonds: int
+
+    n_h_bond_acceptors: int
+    n_h_bond_donors: int
+
+    topological_polar_surface_area: float
 
 
 class SploreDBPage:
@@ -129,7 +153,14 @@ class SploreDB:
 
     @property
     def n_molecules(self) -> int:
-        return self._connection.execute("select count(*) from molecules").fetchone()[0]
+
+        if self._n_molecules is None:
+
+            self._n_molecules = self._connection.execute(
+                "select count(*) from molecules"
+            ).fetchone()[0]
+
+        return self._n_molecules
 
     def __init__(self, file_path: Union[os.PathLike, str], clear_existing: bool = True):
 
@@ -144,6 +175,8 @@ class SploreDB:
 
         if clear_existing:
             self.clear()
+
+        self._n_molecules = None
 
     def __del__(self):
 
@@ -164,32 +197,57 @@ class SploreDB:
             else:
                 assert len(db_info) == 1 and db_info[0] == (1,)
 
-            self._connection.execute(
-                "create table if not exists molecules "
-                "(smiles text, n_heavy integer, weight real)"
+            python_to_sql_type = {str: "text", int: "integer", float: "real"}
+
+            columns = ", ".join(
+                f"{field} {python_to_sql_type[field_type]}"
+                for field, field_type in SploreDBRow.__annotations__.items()
             )
+
             self._connection.execute(
-                "create index if not exists n_heavy_idx on molecules(n_heavy)"
+                f"create table if not exists molecules ( {columns} )"
             )
-            self._connection.execute(
-                "create index if not exists weight_idx on molecules(weight)"
-            )
+
+            for column in SploreDBRow.__annotations__:
+
+                if column in {"smiles"}:
+                    continue
+
+                self._connection.execute(
+                    f"create index if not exists ix_{column} on molecules({column})"
+                )
+
+            self._connection.execute("pragma optimize")
 
     def create(self, molecules: Iterable[Chem.Mol]):
 
         with self._connection:
 
+            attributes = ", ".join(attr for attr in SploreDBRow.__annotations__)
+            value_stub = ", ".join("?" * len(SploreDBRow.__annotations__))
+
             self._connection.executemany(
-                "insert into molecules (smiles, n_heavy, weight) values (?, ?, ?)",
+                f"insert into molecules ({attributes}) values ({value_stub})",
                 (
-                    (
+                    SploreDBRow(
                         Chem.MolToSmiles(molecule),
-                        molecule.GetNumHeavyAtoms(),
-                        Descriptors.ExactMolWt(molecule),
+                        rdMolDescriptors.CalcExactMolWt(molecule),
+                        rdMolDescriptors.CalcNumHeavyAtoms(molecule),
+                        rdMolDescriptors.CalcNumAliphaticCarbocycles(molecule),
+                        rdMolDescriptors.CalcNumAliphaticHeterocycles(molecule),
+                        rdMolDescriptors.CalcNumAromaticCarbocycles(molecule),
+                        rdMolDescriptors.CalcNumAromaticHeterocycles(molecule),
+                        rdMolDescriptors.CalcNumRotatableBonds(molecule),
+                        rdMolDescriptors.CalcNumHBA(molecule),
+                        rdMolDescriptors.CalcNumHBD(molecule),
+                        rdMolDescriptors.CalcTPSA(molecule, includeSandP=True),
                     )
                     for molecule in molecules
                 ),
             )
+            self._connection.execute("pragma optimize")
+
+        self._n_molecules = None
 
     def read_all(
         self,
@@ -206,7 +264,7 @@ class SploreDB:
         order_by_sql = _sort_by_to_sql(order_by_terms, reverse=backwards)
 
         filters = filters if filters else []
-        where_sql = _filters_to_sql(filters)
+        filters_sql = _filters_to_sql(filters)
 
         if cursor is not None:
 
@@ -237,11 +295,11 @@ class SploreDB:
             else:
                 page_sql = f"({','.join(map(str, lhs))}) > ({','.join(map(str, rhs))})"
 
-            where_sql = (
-                f"{where_sql} and {page_sql}"
-                if where_sql != ""
-                else f"where {page_sql}"
+            filters_sql = (
+                f"{page_sql} and {filters_sql}" if filters_sql != "" else page_sql
             )
+
+        where_sql = f"where {filters_sql}" if len(filters_sql) > 0 else ""
 
         required_fields = [column for column, _ in order_by_terms] + ["smiles"]
 
@@ -269,13 +327,17 @@ class SploreDB:
 
         return SploreDBPage(cursor, backwards, per_page, keys, rows)
 
-    def read(self, molecule_id: int) -> Tuple[str]:
+    def read(self, molecule_id: int) -> SploreDBRow:
 
-        return self._connection.execute(
-            f"select smiles " f"from molecules " f"where ROWID = {molecule_id}"
-        ).fetchone()
+        return SploreDBRow(
+            *self._connection.execute(
+                f"select * from molecules where ROWID = {molecule_id}"
+            ).fetchone()
+        )
 
     def clear(self):
 
         with self._connection:
             self._connection.execute("delete from molecules")
+
+        self._n_molecules = None

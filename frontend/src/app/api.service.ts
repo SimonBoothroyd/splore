@@ -76,13 +76,25 @@ export class ApiService {
           columnFilter = columnFilter as RangeFilter;
 
           if (columnFilter.le)
-            params = params.append("n_heavy", `le(${columnFilter.le})`);
+            params = params.append(
+              columnFilter.column,
+              `le(${columnFilter.le})`
+            );
           if (columnFilter.lt)
-            params = params.append("n_heavy", `lt(${columnFilter.lt})`);
+            params = params.append(
+              columnFilter.column,
+              `lt(${columnFilter.lt})`
+            );
           if (columnFilter.gt)
-            params = params.append("n_heavy", `gt(${columnFilter.gt})`);
+            params = params.append(
+              columnFilter.column,
+              `gt(${columnFilter.gt})`
+            );
           if (columnFilter.ge)
-            params = params.append("n_heavy", `ge(${columnFilter.ge})`);
+            params = params.append(
+              columnFilter.column,
+              `ge(${columnFilter.ge})`
+            );
 
           break;
         case "smarts":

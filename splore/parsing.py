@@ -2,7 +2,7 @@ import base64
 import json
 import re
 from collections import defaultdict
-from typing import List, Optional, Tuple, Type, TypeVar, Union
+from typing import Dict, List, Optional, Tuple, Type, TypeVar, Union
 
 from splore.models import Cursor, Page, RangeFilter, SortBy
 
@@ -50,17 +50,25 @@ def parse_page(page: Optional[str]) -> Page:
     return cursor, direction
 
 
-def encode_sort_by(sort_by: SortBy) -> str:
-    return f"{sort_by[1]}({sort_by[0]})"
+def encode_sort_by(
+    sort_by: SortBy, column_aliases: Optional[Dict[str, str]] = None
+) -> str:
+
+    column_aliases = column_aliases if column_aliases is not None else {}
+    return f"{sort_by[1]}({column_aliases.get(sort_by[0], sort_by[0])})"
 
 
-def parse_sort_by(sort_by: Optional[str]) -> Optional[SortBy]:
+def parse_sort_by(
+    sort_by: Optional[str], column_aliases: Optional[Dict[str, str]] = None
+) -> Optional[SortBy]:
+
+    column_aliases = column_aliases if column_aliases is not None else {}
 
     if sort_by is None:
         return None
 
     direction, column = re.match(SORT_REGEX, sort_by).groups()
-    return column, direction
+    return column_aliases.get(column, column), direction
 
 
 def encode_range_filter(range_filter: RangeFilter) -> List[str]:

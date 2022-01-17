@@ -40,9 +40,14 @@ from click import UsageError
 @click.pass_context
 def main(ctx, file_path, qc_dataset_name, qc_dataset_type, port):
 
-    from splore.db import SploreDB
-    from splore.io import molecules_from_file, molecules_from_qcfractal
-    from splore.utilities import set_env
+    console = rich.get_console()
+    console.rule("SPLORE")
+
+    with console.status("loading [italic]splore[/italic]"):
+
+        from splore.db import SploreDB
+        from splore.io import molecules_from_file, molecules_from_qcfractal
+        from splore.utilities import set_env
 
     if file_path is None and qc_dataset_name is None:
         raise UsageError(
@@ -59,15 +64,13 @@ def main(ctx, file_path, qc_dataset_name, qc_dataset_type, port):
             "A `--qcf-datatype` must be provided when specifying a `--qcf-dataset`", ctx
         )
 
-    console = rich.get_console()
-    console.rule("SPLORE")
-
     with NamedTemporaryFile(suffix=".sqlite") as db_file:
 
         db = SploreDB(db_file.name)
 
         with console.status(
-            f"loading [file]{file_path if file_path else qc_dataset_name}[/file]"
+            f"loading "
+            f"[repr.path]{file_path if file_path else qc_dataset_name}[/repr.path]"
         ):
 
             if file_path is not None:
@@ -85,8 +88,9 @@ def main(ctx, file_path, qc_dataset_name, qc_dataset_type, port):
         ):
 
             rich.print(
-                f"The GUI will be available at http://localhost:{port} after a few "
-                f"seconds."
+                f"The GUI will be available at "
+                f"[markdown.link_url]http://localhost:{port}[/markdown.link_url] "
+                f"after a few seconds."
             )
 
             uvicorn.run(

@@ -1,15 +1,21 @@
 import {
   ChangeDetectionStrategy,
+  ChangeDetectorRef,
   Component,
-  ElementRef,
   Inject,
+  OnDestroy,
   OnInit,
 } from "@angular/core";
 import { ApiService } from "./api.service";
 import { MAT_DIALOG_DATA } from "@angular/material/dialog";
 import { BASE_API_URL } from "./app.module";
-import { GETMoleculeResponse } from "./api.interface";
+import {
+  GETMoleculeResponse,
+  GETMoleculeResponseBase,
+  MoleculeDescriptors,
+} from "./api.interface";
 import { MatTooltip } from "@angular/material/tooltip";
+import { Subscription } from "rxjs";
 
 @Component({
   selector: "app-filter-dialog",
@@ -17,16 +23,31 @@ import { MatTooltip } from "@angular/material/tooltip";
   styleUrls: ["molecule-dialog.component.scss"],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class MoleculeDialogComponent implements OnInit {
+export class MoleculeDialogComponent implements OnInit, OnDestroy {
   public readonly BASE_API_URL: string = BASE_API_URL;
+  public descriptors?: MoleculeDescriptors = undefined;
+  private moleculeSubscription$: Subscription;
 
   constructor(
     private apiService: ApiService,
-    private element: ElementRef,
-    @Inject(MAT_DIALOG_DATA) public data: { molecule: GETMoleculeResponse }
-  ) {}
+    private changeRef: ChangeDetectorRef,
+    @Inject(MAT_DIALOG_DATA) public data: { molecule: GETMoleculeResponseBase }
+  ) {
+    console.log(this.data.molecule.self);
+
+    this.moleculeSubscription$ = this.apiService
+      .getEndpoint<GETMoleculeResponse>(this.data.molecule.self)
+      .subscribe((response) => {
+        this.descriptors = response.descriptors;
+        this.changeRef.detectChanges();
+      });
+  }
 
   ngOnInit(): void {}
+
+  ngOnDestroy() {
+    this.moleculeSubscription$.unsubscribe();
+  }
 
   onCopied(tooltip: MatTooltip, success: boolean) {
     tooltip.disabled = false;

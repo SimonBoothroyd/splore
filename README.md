@@ -54,16 +54,18 @@ The required dependencies for this framework can be installed using `conda`:
 
 ```shell
 conda env create --name splore --file devtools/conda-envs/test-env.yaml
-python setup.py develop
 ```
 
 after which the GUI can be built by running:
 
 ```shell
-cd frontend
-npm install
-npm run build -- -c production --output-path ../splore/_static --resources-output-path --deploy-url static/
-cd ..
+python setup.py build_gui
+```
+
+and the package installed in the normal ways, e.g.:
+
+```shell
+python setup.py develop
 ```
 
 ### License

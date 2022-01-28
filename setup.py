@@ -33,7 +33,7 @@ class BuildGUICommand(Command):
 
         try:
             os.chdir("frontend")
-            subprocess.check_call(["npm", "install"])
+            subprocess.check_call(["npm", "install"], shell=True)
             subprocess.check_call(
                 [
                     "npm",
@@ -44,7 +44,7 @@ class BuildGUICommand(Command):
                     os.path.join(os.pardir, "splore", "_static"),
                     "--deploy-url",
                     "static/",
-                ]
+                ], shell=True
             )
             shutil.copyfile(
                 os.path.join(os.pardir, "splore", "_static", "3rdpartylicenses.txt"),
